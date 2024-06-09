@@ -1,5 +1,6 @@
 import os
 import time
+import webbrowser
 from datetime import datetime
 import ttkbootstrap as ttk
 from tkinter import filedialog, StringVar, BooleanVar
@@ -13,6 +14,7 @@ class SimpleFileScanner:
         self.root.title("Simple File Scanner (SFS)")
         self.root.geometry("600x500")
         self.root.style = ttk.Style('darkly')
+        self.root.resizable(False, False)  # Disable window resizing
 
         # Variables
         self.folder_path = StringVar()
@@ -66,11 +68,17 @@ class SimpleFileScanner:
         ttk.Label(self.root, text="* Having these checked means the scanner will skip these directories.", style="warning.TLabel").pack(pady=10)
 
         # Scan Button
-        ttk.Button(self.root, text="Scan", command=self.scan_files, style="success.TButton").pack(pady=20)
+        ttk.Button(self.root, text="Scan", command=self.scan_files, style="success.TButton").pack(pady=10)
+
+        # Latest Release Button
+        ttk.Button(self.root, text="Latest Release", command=self.open_latest_release, style="info.TButton").pack(pady=10)
 
         # Progress Bar
         self.progress_bar = ttk.Progressbar(self.root, orient=HORIZONTAL, mode='determinate', length=500)
-        self.progress_bar.pack(pady=20)
+        self.progress_bar.pack(pady=10)
+
+        # Watermark
+        ttk.Label(self.root, text="Made With <3 By tfbt", style="secondary.TLabel", font=("Helvetica", 8)).place(relx=1.0, rely=1.0, anchor='se', x=-5, y=-5)
 
     def browse_folder(self):
         folder_selected = filedialog.askdirectory()
@@ -136,6 +144,9 @@ class SimpleFileScanner:
         with open("FoundFiles.txt", 'w') as f:
             for file in file_list:
                 f.write(f"{file}\n")
+
+    def open_latest_release(self):
+        webbrowser.open("https://github.com/VVoiddd/Simple-File-Scanner")
 
 def main():
     root = TkinterDnD.Tk()
