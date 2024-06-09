@@ -2,7 +2,7 @@ import os
 import time
 from datetime import datetime
 import ttkbootstrap as ttk
-from tkinter import filedialog, StringVar
+from tkinter import filedialog, StringVar, BooleanVar
 from ttkbootstrap.constants import *
 from tkinterdnd2 import TkinterDnD, DND_FILES
 import tkinter.messagebox as messagebox
@@ -11,13 +11,21 @@ class SimpleFileScanner:
     def __init__(self, root):
         self.root = root
         self.root.title("Simple File Scanner (SFS)")
-        self.root.geometry("600x400")
+        self.root.geometry("600x500")
         self.root.style = ttk.Style('darkly')
 
         # Variables
         self.folder_path = StringVar()
         self.days_unused = StringVar()
         self.days_unused.set("30")  # Default value
+
+        # Directory skip options
+        self.skip_steam = BooleanVar(value=True)
+        self.skip_microsoft_store = BooleanVar(value=True)
+        self.skip_xbox = BooleanVar(value=True)
+        self.skip_discord = BooleanVar(value=True)
+        self.skip_ubisoft = BooleanVar(value=True)
+        self.skip_other_games = BooleanVar(value=True)
 
         # UI Elements
         self.create_widgets()
@@ -43,6 +51,19 @@ class SimpleFileScanner:
         days_frame.pack(fill=X)
         ttk.Label(days_frame, text="Days Unused:", style="secondary.TLabel").pack(side=LEFT)
         ttk.Entry(days_frame, textvariable=self.days_unused, width=5, style="info.TEntry").pack(side=LEFT, padx=5)
+
+        # Skip options
+        skip_frame = ttk.Frame(self.root, padding=10)
+        skip_frame.pack(fill=X)
+        ttk.Label(skip_frame, text="Skip Directories:", style="secondary.TLabel").pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Steam", variable=self.skip_steam, style="info.TCheckbutton").pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Microsoft Store", variable=self.skip_microsoft_store, style="info.TCheckbutton").pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Xbox", variable=self.skip_xbox, style="info.TCheckbutton").pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Discord", variable=self.skip_discord, style="info.TCheckbutton").pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Ubisoft", variable=self.skip_ubisoft, style="info.TCheckbutton").pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Other Game Stores (Epic Games, Origin, etc.)", variable=self.skip_other_games, style="info.TCheckbutton").pack(anchor='w')
+
+        ttk.Label(self.root, text="* Having these checked means the scanner will skip these directories.", style="warning.TLabel").pack(pady=10)
 
         # Scan Button
         ttk.Button(self.root, text="Scan", command=self.scan_files, style="success.TButton").pack(pady=20)
@@ -72,6 +93,20 @@ class SimpleFileScanner:
         messagebox.showinfo("Scan Complete", f"Found {len(unused_files)} unused files. The list has been written to FoundFiles.txt")
 
     def scan_for_unused_files(self, directory, days_unused):
+        skip_dirs = set()
+        if self.skip_steam.get():
+            skip_dirs.add('steam')
+        if self.skip_microsoft_store.get():
+            skip_dirs.add('microsoft store')
+        if self.skip_xbox.get():
+            skip_dirs.add('xbox')
+        if self.skip_discord.get():
+            skip_dirs.add('discord')
+        if self.skip_ubisoft.get():
+            skip_dirs.add('ubisoft')
+        if self.skip_other_games.get():
+            skip_dirs.update(['epic games', 'origin', 'battle.net', 'gog'])
+
         unused_files = []
         current_time = time.time()
         cutoff_time = current_time - (days_unused * 86400)  # Convert days to seconds
@@ -79,7 +114,11 @@ class SimpleFileScanner:
         total_files = sum(len(files) for _, _, files in os.walk(directory))
         processed_files = 0
 
-        for root, _, files in os.walk(directory):
+        for root, dirs, files in os.walk(directory):
+            # Skip specified directories
+            if any(skip_dir in root.lower() for skip_dir in skip_dirs):
+                continue
+
             for file in files:
                 file_path = os.path.join(root, file)
                 if os.path.isfile(file_path):
