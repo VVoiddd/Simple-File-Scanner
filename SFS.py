@@ -5,6 +5,7 @@ import ttkbootstrap as ttk
 from tkinter import filedialog, StringVar
 from ttkbootstrap.constants import *
 from tkinterdnd2 import TkinterDnD, DND_FILES
+import tkinter.messagebox as messagebox
 
 class SimpleFileScanner:
     def __init__(self, root):
@@ -62,13 +63,13 @@ class SimpleFileScanner:
         directory = self.folder_path.get()
         days_unused = int(self.days_unused.get())
         if not directory:
-            ttk.Messagebox.show_error("Error", "Please select a directory to scan.")
+            messagebox.showerror("Error", "Please select a directory to scan.")
             return
 
         unused_files = self.scan_for_unused_files(directory, days_unused)
         self.write_to_file(unused_files)
 
-        ttk.Messagebox.show_info("Scan Complete", f"Found {len(unused_files)} unused files. The list has been written to FoundFiles.txt")
+        messagebox.showinfo("Scan Complete", f"Found {len(unused_files)} unused files. The list has been written to FoundFiles.txt")
 
     def scan_for_unused_files(self, directory, days_unused):
         unused_files = []
