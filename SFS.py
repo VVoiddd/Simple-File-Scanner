@@ -14,7 +14,7 @@ class SimpleFileScanner:
     def __init__(self, root):
         self.root = root
         self.root.title("Simple File Scanner (SFS)")
-        self.root.geometry("600x500")
+        self.root.geometry("600x650")
         self.root.style = ttk.Style('darkly')
         self.root.resizable(False, False)  # Disable window resizing
 
