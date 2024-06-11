@@ -7,6 +7,8 @@ from tkinter import filedialog, StringVar, BooleanVar
 from ttkbootstrap.constants import *
 from tkinterdnd2 import TkinterDnD, DND_FILES
 import tkinter.messagebox as messagebox
+from MoveFiles import move_files
+from FileRemover import delete_files
 
 class SimpleFileScanner:
     def __init__(self, root):
@@ -20,6 +22,7 @@ class SimpleFileScanner:
         self.folder_path = StringVar()
         self.days_unused = StringVar()
         self.days_unused.set("30")  # Default value
+        self.move_destination = StringVar()
 
         # Directory skip options
         self.skip_steam = BooleanVar(value=True)
@@ -54,6 +57,14 @@ class SimpleFileScanner:
         ttk.Label(days_frame, text="Days Unused:", style="secondary.TLabel").pack(side=LEFT)
         ttk.Entry(days_frame, textvariable=self.days_unused, width=5, style="info.TEntry").pack(side=LEFT, padx=5)
 
+        # Move Destination
+        move_frame = ttk.Frame(self.root, padding=10)
+        move_frame.pack(fill=X)
+        ttk.Label(move_frame, text="Move Destination:", style="secondary.TLabel").pack(side=LEFT)
+        move_entry = ttk.Entry(move_frame, textvariable=self.move_destination, width=40, state='readonly', style="info.TEntry")
+        move_entry.pack(side=LEFT, padx=5)
+        ttk.Button(move_frame, text="Browse", command=self.browse_move_folder, style="info.TButton").pack(side=LEFT)
+
         # Skip options
         skip_frame = ttk.Frame(self.root, padding=10)
         skip_frame.pack(fill=X)
@@ -70,6 +81,10 @@ class SimpleFileScanner:
         # Scan Button
         ttk.Button(self.root, text="Scan", command=self.scan_files, style="success.TButton").pack(pady=10)
 
+        # Move and Delete Buttons
+        ttk.Button(self.root, text="Move Files", command=self.move_files_to_destination, style="success.TButton").pack(pady=5)
+        ttk.Button(self.root, text="Delete Files", command=self.delete_files, style="danger.TButton").pack(pady=5)
+
         # Latest Release Button
         ttk.Button(self.root, text="Latest Release", command=self.open_latest_release, style="info.TButton").pack(pady=10)
 
@@ -84,6 +99,11 @@ class SimpleFileScanner:
         folder_selected = filedialog.askdirectory()
         if folder_selected:
             self.folder_path.set(folder_selected)
+
+    def browse_move_folder(self):
+        folder_selected = filedialog.askdirectory()
+        if folder_selected:
+            self.move_destination.set(folder_selected)
 
     def drop_folder(self, event):
         self.folder_path.set(event.data)
@@ -144,6 +164,18 @@ class SimpleFileScanner:
         with open("FoundFiles.txt", 'w') as f:
             for file in file_list:
                 f.write(f"{file}\n")
+
+    def move_files_to_destination(self):
+        with open("FoundFiles.txt", 'r') as f:
+            file_list = [line.strip() for line in f.readlines()]
+        move_files(file_list, self.move_destination.get())
+        messagebox.showinfo("Move Complete", f"Moved {len(file_list)} files to {self.move_destination.get()}")
+
+    def delete_files(self):
+        with open("FoundFiles.txt", 'r') as f:
+            file_list = [line.strip() for line in f.readlines()]
+        delete_files(file_list)
+        messagebox.showinfo("Deletion Complete", f"Deleted {len(file_list)} files")
 
     def open_latest_release(self):
         webbrowser.open("https://github.com/VVoiddd/Simple-File-Scanner")
