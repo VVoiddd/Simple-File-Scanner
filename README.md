@@ -1,5 +1,7 @@
 # Simple File Scanner (SFS)
 
+![SFS](SFS.png)
+
 Simple File Scanner (SFS) is a Python application designed to scan a directory for unused files that have not been accessed within a specified number of days. The application features a modern, dark-themed graphical user interface (GUI) built with `ttkbootstrap`.
 
 ## Features
@@ -59,7 +61,7 @@ If you would like to contribute to this project, please fork the repository and 
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the LICENSE file for more details.
+This project is licensed under the Apache License 2.0. See the [LICENSE](https://github.com/VVoiddd/Simple-File-Scanner/blob/main/LICENSE) file for more details.
 
 ## Acknowledgements
 
