@@ -29,10 +29,10 @@ jobs:
         pip install -r requirements.txt  # Ensure you have a requirements.txt file listing your project dependencies
 
     - name: Build executable
-      run: pyinstaller --onefile --windowed SFS.py
+      run: pyinstaller --onefile --windowed --icon=SFS.png SFS.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: SimpleFileScanner
-        path: dist/SimpleFileScanner.exe
+        path: dist/SFS.exe
