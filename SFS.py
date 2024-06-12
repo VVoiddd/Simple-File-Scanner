@@ -9,6 +9,7 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 import tkinter.messagebox as messagebox
 from MoveFiles import move_files
 from FileRemover import delete_files
+from shared_utils import get_core_windows_dirs
 
 class SimpleFileScanner:
     def __init__(self, root):
@@ -135,18 +136,7 @@ class SimpleFileScanner:
         if self.skip_other_games.get():
             skip_dirs.update(['epic games', 'origin', 'battle.net', 'gog'])
 
-        # Core Windows directories to skip
-        core_windows_dirs = [
-            os.environ.get('SystemRoot', 'C:\\Windows'),
-            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Program Files'),
-            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Program Files (x86)'),
-            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Users', 'Default'),
-            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Users', 'Public'),
-            os.path.join(os.environ.get('SystemDrive', 'C:'), '$Recycle.Bin'),
-            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Recovery'),
-            os.path.join(os.environ.get('SystemDrive', 'C:'), 'System Volume Information'),
-            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Windows.old')
-        ]
+        core_windows_dirs = get_core_windows_dirs()
 
         unused_files = []
         current_time = time.time()
