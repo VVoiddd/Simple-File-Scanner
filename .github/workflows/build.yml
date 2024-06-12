@@ -54,7 +54,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.increment_version.outputs.NEW_TAG_NAME }}
+        tag_name: ${{ steps.increment_version.outputs.NEW_TAG_NAME }}  # Provide tag_name input
         release_name: ${{ steps.increment_version.outputs.NEW_TAG_NAME }}
         draft: false
         prerelease: false
