@@ -36,7 +36,9 @@ jobs:
 
     - name: Get latest tag
       id: get_tag
-      run: echo ::set-output name=TAG_NAME::$(git describe --tags --abbrev=0 || echo "v1.0.0")
+      run: |
+        git fetch --tags
+        echo ::set-output name=TAG_NAME::$(git describe --tags --abbrev=0 || echo "v1.0.0")
 
     - name: Create Release
       uses: actions/create-release@v1
