@@ -15,12 +15,3 @@ def delete_files(file_list):
             print(f"Deleted: {file}")
         except Exception as e:
             print(f"Failed to delete {file}: {e}")
-
-if __name__ == "__main__":
-    # Example usage
-    test_files = [
-        "C:\\Windows\\System32\\example.dll",
-        "C:\\Users\\username\\Documents\\old_file.txt",
-        "C:\\Program Files\\example.exe"
-    ]
-    delete_files(test_files)
