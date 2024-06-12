@@ -135,6 +135,19 @@ class SimpleFileScanner:
         if self.skip_other_games.get():
             skip_dirs.update(['epic games', 'origin', 'battle.net', 'gog'])
 
+        # Core Windows directories to skip
+        core_windows_dirs = [
+            os.environ.get('SystemRoot', 'C:\\Windows'),
+            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Program Files'),
+            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Program Files (x86)'),
+            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Users', 'Default'),
+            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Users', 'Public'),
+            os.path.join(os.environ.get('SystemDrive', 'C:'), '$Recycle.Bin'),
+            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Recovery'),
+            os.path.join(os.environ.get('SystemDrive', 'C:'), 'System Volume Information'),
+            os.path.join(os.environ.get('SystemDrive', 'C:'), 'Windows.old')
+        ]
+
         unused_files = []
         current_time = time.time()
         cutoff_time = current_time - (days_unused * 86400)  # Convert days to seconds
@@ -144,7 +157,7 @@ class SimpleFileScanner:
 
         for root, dirs, files in os.walk(directory):
             # Skip specified directories
-            if any(skip_dir in root.lower() for skip_dir in skip_dirs):
+            if any(skip_dir in root.lower() for skip_dir in skip_dirs) or any(root.startswith(core_dir) for core_dir in core_windows_dirs):
                 continue
 
             for file in files:
