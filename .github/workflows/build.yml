@@ -2,9 +2,9 @@ name: Build Executable and Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -38,14 +38,14 @@ jobs:
       id: get_tag
       run: |
         git fetch --tags
-        $TAG = (git describe --tags --abbrev=0 2>$null) -or "v1.0.0"
+        TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG="v1.0.0"
         echo "::set-output name=TAG_NAME::$TAG"
 
     - name: Increment version
       id: increment_version
       run: |
-        $VERSION = ${{ steps.get_tag.outputs.TAG_NAME }}
-        $NEXT_VERSION = "v$((($VERSION -split '\.')[1] + 1))"
+        VERSION=${{ steps.get_tag.outputs.TAG_NAME }}
+        NEXT_VERSION="v$(((${VERSION#v} + 1)))"
         echo "::set-output name=NEW_TAG_NAME::$NEXT_VERSION"
 
     - name: Create Release
