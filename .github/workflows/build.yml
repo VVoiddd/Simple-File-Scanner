@@ -42,33 +42,31 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: SFS-executable
-          path: dist/SFS.exe
+          path: dist/SFS
 
       - name: Get latest tag
         id: get_tag
         run: |
-            git fetch --tags
-            TAG=$(git describe --tags --abbrev=0)
-            if [ -z "$TAG" ]; then
-              echo "::set-output name=TAG_NAME::v1.0.0"  # Default to v1.0.0 if no tags are available
-            else
-              echo "TAG_NAME=$TAG" >> $GITHUB_ENV
-            fi
-        
+          git fetch --tags
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$TAG" ]; then
+            echo "::set-output name=TAG_NAME::v1.0.0"  # Default to v1.0.0 if no tags are available
+          else
+            echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+          fi
 
       - name: Increment version
         id: increment_version
         run: |
-            TAG_NAME=$(git describe --tags `git rev-list --tags --max-count=1`)
-            VERSION=${TAG_NAME:1}
-            IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
-            MAJOR="${VERSION_PARTS[0]}"
-            MINOR="${VERSION_PARTS[1]}"
-            PATCH="${VERSION_PARTS[2]}"
-            ((PATCH++))
-            NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
-            echo "NEW_TAG_NAME=v$NEXT_VERSION" >> $GITHUB_ENV
-        
+          TAG_NAME=$(git describe --tags `git rev-list --tags --max-count=1`)
+          VERSION=${TAG_NAME:1}
+          IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+          MAJOR="${VERSION_PARTS[0]}"
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH="${VERSION_PARTS[2]}"
+          ((PATCH++))
+          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "NEW_TAG_NAME=v$NEXT_VERSION" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         id: create_github_release
@@ -87,6 +85,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_github_release.outputs.upload_url }}
-          asset_path: dist/SFS.exe
-          asset_name: SFS.exe
+          asset_path: dist/SFS
+          asset_name: SFS
           asset_content_type: application/octet-stream
