@@ -1,7 +1,6 @@
 import os
 import time
 import webbrowser
-from datetime import datetime
 import ttkbootstrap as ttk
 from tkinter import filedialog, StringVar, BooleanVar
 from ttkbootstrap.constants import *
