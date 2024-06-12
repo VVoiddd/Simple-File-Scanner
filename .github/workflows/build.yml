@@ -54,14 +54,16 @@ jobs:
       - name: Increment version
         id: increment_version
         run: |
-          VERSION=${TAG_NAME:1}
-          IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
-          MAJOR="${VERSION_PARTS[0]}"
-          MINOR="${VERSION_PARTS[1]}"
-          PATCH="${VERSION_PARTS[2]}"
-          ((PATCH++))
-          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
-          echo "NEW_TAG_NAME=v$NEXT_VERSION" >> $GITHUB_ENV
+            TAG_NAME=$(git describe --tags `git rev-list --tags --max-count=1`)
+            VERSION=${TAG_NAME:1}
+            IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+            MAJOR="${VERSION_PARTS[0]}"
+            MINOR="${VERSION_PARTS[1]}"
+            PATCH="${VERSION_PARTS[2]}"
+            ((PATCH++))
+            NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+            echo "NEW_TAG_NAME=v$NEXT_VERSION" >> $GITHUB_ENV
+        
 
       - name: Create GitHub Release
         id: create_github_release
