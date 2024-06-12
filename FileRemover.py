@@ -1,3 +1,5 @@
+#FileRemover.py
+
 import os
 from shared_utils import get_core_windows_dirs
 
