@@ -54,7 +54,7 @@ jobs:
             else
               echo "TAG_NAME=$TAG" >> $GITHUB_ENV
             fi
-        
+        continue-on-error: true
 
       - name: Increment version
         id: increment_version
@@ -68,8 +68,10 @@ jobs:
           ((PATCH++))
           NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
           echo "NEW_TAG_NAME=v$NEXT_VERSION" >> $GITHUB_ENV
+        continue-on-error: true
 
       - name: Create GitHub Release
+        if: ${{ steps.increment_version.outputs.NEW_TAG_NAME != null }}
         id: create_github_release
         uses: actions/create-release@v1
         env:
@@ -81,6 +83,7 @@ jobs:
           prerelease: false
 
       - name: Upload Release Asset
+        if: ${{ steps.increment_version.outputs.NEW_TAG_NAME != null }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
