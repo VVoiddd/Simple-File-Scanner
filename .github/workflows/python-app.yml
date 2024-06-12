@@ -1,0 +1,38 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Build Executable
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install -r requirements.txt  # Ensure you have a requirements.txt file listing your project dependencies
+
+    - name: Build executable
+      run: pyinstaller --onefile --windowed SFS.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: SimpleFileScanner
+        path: dist/SimpleFileScanner.exe
