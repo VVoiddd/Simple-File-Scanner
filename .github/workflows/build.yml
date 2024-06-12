@@ -37,9 +37,10 @@ jobs:
       - name: Get latest tag
         id: get_tag
         run: |
-          git fetch --tags
-          TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+            git fetch --tags
+            TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+            echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+        
 
       - name: Increment version
         id: increment_version
