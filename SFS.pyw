@@ -1,8 +1,8 @@
 # SFS.pyw
 
 import os
-import sys
 import time
+import sys
 import threading
 import webbrowser
 import ctypes
