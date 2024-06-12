@@ -1,8 +1,11 @@
-#SFS.py
+# SFS.py
 
 import os
+import sys
 import time
+import threading
 import webbrowser
+import ctypes
 import ttkbootstrap as ttk
 from tkinter import filedialog, StringVar, BooleanVar
 from ttkbootstrap.constants import *
@@ -19,6 +22,9 @@ class SimpleFileScanner:
         self.root.geometry("600x650")
         self.root.style = ttk.Style('darkly')
         self.root.resizable(False, False)  # Disable window resizing
+
+        # Request administrative privileges
+        self.request_admin_access()
 
         # Variables
         self.folder_path = StringVar()
@@ -81,11 +87,11 @@ class SimpleFileScanner:
         ttk.Label(self.root, text="* Having these checked means the scanner will skip these directories.", style="warning.TLabel").pack(pady=10)
 
         # Scan Button
-        ttk.Button(self.root, text="Scan", command=self.scan_files, style="success.TButton").pack(pady=10)
+        ttk.Button(self.root, text="Scan", command=self.scan_files_thread, style="success.TButton").pack(pady=10)
 
         # Move and Delete Buttons
-        ttk.Button(self.root, text="Move Files", command=self.move_files_to_destination, style="success.TButton").pack(pady=5)
-        ttk.Button(self.root, text="Delete Files", command=self.delete_files, style="danger.TButton").pack(pady=5)
+        ttk.Button(self.root, text="Move Files", command=self.move_files_to_destination_thread, style="success.TButton").pack(pady=5)
+        ttk.Button(self.root, text="Delete Files", command=self.delete_files_thread, style="danger.TButton").pack(pady=5)
 
         # Latest Release Button
         ttk.Button(self.root, text="Latest Release", command=self.open_latest_release, style="info.TButton").pack(pady=10)
@@ -111,16 +117,19 @@ class SimpleFileScanner:
         self.folder_path.set(event.data)
 
     def scan_files(self):
-        directory = self.folder_path.get()
-        days_unused = int(self.days_unused.get())
-        if not directory:
-            messagebox.showerror("Error", "Please select a directory to scan.")
-            return
+        try:
+            directory = self.folder_path.get()
+            days_unused = int(self.days_unused.get())
+            if not directory:
+                messagebox.showerror("Error", "Please select a directory to scan.")
+                return
 
-        unused_files = self.scan_for_unused_files(directory, days_unused)
-        self.write_to_file(unused_files)
+            unused_files = self.scan_for_unused_files(directory, days_unused)
+            self.write_to_file(unused_files)
 
-        messagebox.showinfo("Scan Complete", f"Found {len(unused_files)} unused files. The list has been written to FoundFiles.txt")
+            messagebox.showinfo("Scan Complete", f"Found {len(unused_files)} unused files. The list has been written to FoundFiles.txt")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def scan_for_unused_files(self, directory, days_unused):
         skip_dirs = set()
@@ -170,19 +179,45 @@ class SimpleFileScanner:
                 f.write(f"{file}\n")
 
     def move_files_to_destination(self):
-        with open("FoundFiles.txt", 'r') as f:
-            file_list = [line.strip() for line in f.readlines()]
-        move_files(file_list, self.move_destination.get())
-        messagebox.showinfo("Move Complete", f"Moved {len(file_list)} files to {self.move_destination.get()}")
+        try:
+            with open("FoundFiles.txt", 'r') as f:
+                file_list = [line.strip() for line in f.readlines()]
+            move_files(file_list, self.move_destination.get())
+            messagebox.showinfo("Move Complete", f"Moved {len(file_list)} files to {self.move_destination.get()}")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def delete_files(self):
-        with open("FoundFiles.txt", 'r') as f:
-            file_list = [line.strip() for line in f.readlines()]
-        delete_files(file_list)
-        messagebox.showinfo("Deletion Complete", f"Deleted {len(file_list)} files")
+        try:
+            with open("FoundFiles.txt", 'r') as f:
+                file_list = [line.strip() for line in f.readlines()]
+            delete_files(file_list)
+            messagebox.showinfo("Deletion Complete", f"Deleted {len(file_list)} files")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def open_latest_release(self):
         webbrowser.open("https://github.com/VVoiddd/Simple-File-Scanner")
+
+    def scan_files_thread(self):
+        threading.Thread(target=self.scan_files).start()
+
+    def move_files_to_destination_thread(self):
+        threading.Thread(target=self.move_files_to_destination).start()
+
+    def delete_files_thread(self):
+        threading.Thread(target=self.delete_files).start()
+
+    def request_admin_access(self):
+        try:
+            # Check if the script is running as an admin
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            if not is_admin:
+                # Re-run the script as admin
+                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+                sys.exit(0)
+        except Exception as e:
+            messagebox.showerror("Admin Access Error", str(e))
 
 def main():
     root = TkinterDnD.Tk()
