@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
 
-    steps:
+steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
@@ -26,7 +26,7 @@ jobs:
 
     - name: Build executable
       run: |
-        pyinstaller --onefile --windowed --icon=SFS.ico SFS.py
+        pyinstaller --onefile --windowed SFS.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
@@ -38,15 +38,17 @@ jobs:
       id: get_tag
       run: |
         git fetch --tags
-        TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG="v1.0.0"
-        echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+        for /f "delims=" %%a in ('git describe --tags --abbrev=0 2^>nul') do set "TAG=%%a"
+        if not defined TAG set "TAG=v1.0.0"
+        echo "TAG_NAME=%TAG%" >> $GITHUB_ENV
 
     - name: Increment version
       id: increment_version
       run: |
-        VERSION=${TAG_NAME#v}
-        NEXT_VERSION="v$((VERSION + 1))"
-        echo "::set-output name=NEW_TAG_NAME::$NEXT_VERSION"
+        set /a VERSION=%TAG_NAME:~1%
+        set /a NEXT_VERSION=VERSION+1
+        set "NEXT_VERSION=v%NEXT_VERSION%"
+        echo "::set-output name=NEW_TAG_NAME::%NEXT_VERSION%"
 
     - name: Create Release
       uses: actions/github-script@v6
