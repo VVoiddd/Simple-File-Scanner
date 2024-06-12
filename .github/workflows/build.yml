@@ -47,9 +47,14 @@ jobs:
       - name: Get latest tag
         id: get_tag
         run: |
-          git fetch --tags
-          TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+            git fetch --tags
+            TAG=$(git describe --tags --abbrev=0)
+            if [ -z "$TAG" ]; then
+              echo "::set-output name=TAG_NAME::v1.0.0"  # Default to v1.0.0 if no tags are available
+            else
+              echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+            fi
+        
 
       - name: Increment version
         id: increment_version
