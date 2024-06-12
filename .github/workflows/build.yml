@@ -39,6 +39,7 @@ jobs:
       run: |
         git fetch --tags
         TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG="v1.0.0"
+        
         echo "::set-output name=TAG_NAME::$TAG"
 
     - name: Increment version
