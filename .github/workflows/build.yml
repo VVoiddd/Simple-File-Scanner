@@ -2,63 +2,63 @@ name: Build Executable and Release
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
 
-      - name: Install pyinstaller
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller
+    - name: Install pyinstaller
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
 
-      - name: Build executable
-        run: pyinstaller --onefile --windowed --icon=SFS.ico SFS.py
+    - name: Build executable
+      run: pyinstaller --onefile --windowed --icon=SFS.ico SFS.py
 
-      - name: Upload artifact
-        if: success()
-        uses: actions/upload-artifact@v2
-        with:
-          name: SimpleFileScanner
-          path: dist/SFS.exe
+    - name: Upload artifact
+      if: success()
+      uses: actions/upload-artifact@v2
+      with:
+        name: SimpleFileScanner
+        path: dist/SFS.exe
 
-      - name: Get latest tag
-        id: get_tag
-        run: |
-          git fetch --tags
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG="v1.0.0"
-          echo "::set-output name=TAG_NAME::$TAG"
+    - name: Get latest tag
+      id: get_tag
+      run: |
+        git fetch --tags
+        TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG="v1.0.0"
+        echo "::set-output name=TAG_NAME::$TAG"
 
-      - name: Create Release
-        uses: actions/create-release@v1
-        if: always()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
-          release_name: ${{ steps.get_tag.outputs.TAG_NAME }}
-          draft: false
-          prerelease: false
+    - name: Create Release
+      uses: actions/create-release@v1
+      if: always()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+        release_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+        draft: false
+        prerelease: false
 
-      - name: Upload Release Asset
-        if: success()
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/SFS.exe
-          asset_name: SFS.exe
-          asset_content_type: application/octet-stream
+    - name: Upload Release Asset
+      if: success()
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/SFS.exe
+        asset_name: SFS.exe
+        asset_content_type: application/octet-stream
