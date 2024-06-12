@@ -1,4 +1,4 @@
-# SFS.py
+# SFS.pyw
 
 import os
 import sys
