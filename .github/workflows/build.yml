@@ -41,14 +41,18 @@ jobs:
         TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG="v1.0.0"
         echo "::set-output name=TAG_NAME::$TAG"
 
+    - name: Increment version
+      id: increment_version
+      run: echo "::set-output name=NEW_TAG_NAME::v$(python -c 'print(int("$(echo "${{ steps.get_tag.outputs.TAG_NAME }}")".split(".")[1])+1)')"
+
     - name: Create Release
       uses: actions/create-release@v1
       if: always()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
-        release_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+        tag_name: ${{ steps.increment_version.outputs.NEW_TAG_NAME }}
+        release_name: ${{ steps.increment_version.outputs.NEW_TAG_NAME }}
         draft: false
         prerelease: false
 
