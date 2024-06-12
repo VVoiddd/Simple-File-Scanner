@@ -8,6 +8,7 @@ Simple File Scanner (SFS) is a Python application designed to scan a directory f
 
 - Scan a selected directory for unused files.
 - Option to skip directories related to gaming (e.g., Steam, Microsoft Store, Xbox, etc.).
+- Skips core Windows system directories to avoid accidental deletion of critical system files.
 - Displays a progress bar during the scan.
 - Generates a list of unused files in `FoundFiles.txt`.
 - Option to move unused files to a designated directory for deletion.
@@ -71,3 +72,6 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](https:/
 ## Latest Release
 
 For the latest release, visit the [Simple File Scanner GitHub Releases](https://github.com/VVoiddd/Simple-File-Scanner).
+```
+
+This ensures that core Windows system directories are skipped during the scan, reducing the risk of accidental deletion of critical system files.
