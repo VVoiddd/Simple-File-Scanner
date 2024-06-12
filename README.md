@@ -72,6 +72,5 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](https:/
 ## Latest Release
 
 For the latest release, visit the [Simple File Scanner GitHub Releases](https://github.com/VVoiddd/Simple-File-Scanner).
-```
 
-This ensures that core Windows system directories are skipped during the scan, reducing the risk of accidental deletion of critical system files.
+## This ensures that core Windows system directories are skipped during the scan, reducing the risk of accidental deletion of critical system files.
