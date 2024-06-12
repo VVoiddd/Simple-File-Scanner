@@ -38,7 +38,7 @@ jobs:
       id: get_tag
       run: |
         git fetch --tags
-        for /f "delims=" %%a in ('git describe --tags --abbrev=0 2^>nul') do set "TAG=%%a"
+        for /f "delims=" %%a in ('git tag --list') do set "TAG=%%a"
         if not defined TAG set "TAG=v1.0.0"
         echo "TAG_NAME=%TAG%" >> $GITHUB_ENV
 
@@ -51,6 +51,7 @@ jobs:
         echo "::set-output name=NEW_TAG_NAME::%NEXT_VERSION%"
 
     - name: Create Release
+      id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
