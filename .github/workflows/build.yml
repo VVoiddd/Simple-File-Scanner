@@ -1,4 +1,4 @@
-name: Build Executable and Release
+name: Build and Release Python Executable
 
 on:
   push:
@@ -8,27 +8,27 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: '3.9'
 
-    - name: Install pyinstaller
+    - name: Install PyInstaller
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
 
     - name: Build executable
-      run: pyinstaller --onefile --windowed --icon=SFS.ico SFS.py
+      run: |
+        pyinstaller --onefile --windowed --icon=SFS.ico SFS.py
 
     - name: Upload artifact
-      if: success()
       uses: actions/upload-artifact@v2
       with:
         name: SimpleFileScanner
@@ -39,34 +39,32 @@ jobs:
       run: |
         git fetch --tags
         TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG="v1.0.0"
-        echo "::set-output name=TAG_NAME::$TAG"
+        echo "TAG_NAME=$TAG" >> $GITHUB_ENV
 
     - name: Increment version
       id: increment_version
       run: |
-        VERSION=${{ steps.get_tag.outputs.TAG_NAME }}
-        NEXT_VERSION="v$(((${VERSION#v} + 1)))"
+        VERSION=${TAG_NAME#v}
+        NEXT_VERSION="v$((VERSION + 1))"
         echo "::set-output name=NEW_TAG_NAME::$NEXT_VERSION"
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      if: always()
+      uses: actions/create-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.increment_version.outputs.NEW_TAG_NAME }}  # Provide tag_name input
+        tag_name: ${{ steps.increment_version.outputs.NEW_TAG_NAME }}
         release_name: ${{ steps.increment_version.outputs.NEW_TAG_NAME }}
         draft: false
         prerelease: false
 
     - name: Upload Release Asset
-      if: success()
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}  
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist/SFS.exe
         asset_name: SFS.exe
         asset_content_type: application/octet-stream
