@@ -38,16 +38,20 @@ jobs:
         id: get_tag
         run: |
           git fetch --tags
-          TAG=$(git describe --tags `git rev-list --tags --max-count=3`)
+          TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
           echo "TAG_NAME=$TAG" >> $GITHUB_ENV
 
       - name: Increment version
         id: increment_version
         run: |
           VERSION=${TAG_NAME:1}
-          NEXT_VERSION=$((VERSION + 0.0.1))
-          NEXT_VERSION="v$NEXT_VERSION"
-          echo "NEW_TAG_NAME=$NEXT_VERSION" >> $GITHUB_ENV
+          IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+          MAJOR="${VERSION_PARTS[0]}"
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH="${VERSION_PARTS[2]}"
+          ((PATCH++))
+          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "NEW_TAG_NAME=v$NEXT_VERSION" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
