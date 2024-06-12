@@ -6,9 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+icon: SFS.ico
+
 jobs:
   build:
-    runs-on: windows-latest
+
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -26,7 +32,7 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --windowed SFS.py
+          pyinstaller --onefile --windowed --icon=SFS.ico SFS.py
           
       - name: Upload artifact
         uses: actions/upload-artifact@v2
@@ -53,8 +59,8 @@ jobs:
           NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
           echo "NEW_TAG_NAME=v$NEXT_VERSION" >> $GITHUB_ENV
 
-      - name: Create Release
-        id: create_release
+      - name: Create GitHub Release
+        id: create_github_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,7 +75,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ steps.create_github_release.outputs.upload_url }}
           asset_path: dist/SFS.exe
           asset_name: SFS.exe
           asset_content_type: application/octet-stream
