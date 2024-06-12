@@ -38,13 +38,15 @@ jobs:
       id: get_tag
       run: |
         git fetch --tags
-        TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG="v1.0.0"
-        
+        $TAG = (git describe --tags --abbrev=0 2>$null) -or "v1.0.0"
         echo "::set-output name=TAG_NAME::$TAG"
 
     - name: Increment version
       id: increment_version
-      run: echo "::set-output name=NEW_TAG_NAME::v$(python -c 'print(int("$(echo "${{ steps.get_tag.outputs.TAG_NAME }}")".split(".")[1])+1)')"
+      run: |
+        $VERSION = ${{ steps.get_tag.outputs.TAG_NAME }}
+        $NEXT_VERSION = "v$((($VERSION -split '\.')[1] + 1))"
+        echo "::set-output name=NEW_TAG_NAME::$NEXT_VERSION"
 
     - name: Create Release
       uses: actions/create-release@v1
