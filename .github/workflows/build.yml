@@ -28,9 +28,11 @@ jobs:
           pip install --upgrade pip
           pip install pyinstaller
 
+      - name: Create dist directory
+        run: mkdir -p dist
+
       - name: Copy icon file
-        run: |
-          cp SFS.ico dist/
+        run: cp SFS.ico dist/
 
       - name: Build executable
         run: |
