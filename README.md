@@ -35,13 +35,13 @@ To install the required dependencies, you can use the provided `install.bat` fil
 @echo off
 echo Installing required packages...
 pip install -r requirements.txt
-echo Installation complete. You can now run the application with 'python SFS.py'.
+echo Installation complete. You can now run the application with 'python SFS.pyw'.
 pause
 ```
 
 ## Usage
 
-1. **Launch the Application**: Run `python SFS.py` to start the application.
+1. **Launch the Application**: Run `python SFS.pyw` to start the application.
 2. **Select Folder**: Click on the "Browse" button to select the directory you want to scan.
 3. **Set Days Unused**: Enter the number of days in the "Days Unused" field to specify the age threshold for unused files.
 4. **Specify Move Destination**: Click on the "Browse" button next to "Move Destination" to choose the directory where unused files will be moved.
@@ -72,5 +72,3 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](https:/
 ## Latest Release
 
 For the latest release, visit the [Simple File Scanner GitHub Releases](https://github.com/VVoiddd/Simple-File-Scanner).
-
-## This ensures that core Windows system directories are skipped during the scan, reducing the risk of accidental deletion of critical system files.
