@@ -1,11 +1,10 @@
-# SFS.pyw
-
 import os
 import time
 import sys
 import threading
 import webbrowser
 import ctypes
+import logging
 import ttkbootstrap as ttk
 from tkinter import filedialog, StringVar, BooleanVar
 from ttkbootstrap.constants import *
@@ -15,11 +14,15 @@ from MoveFiles import move_files
 from FileRemover import delete_files
 from shared_utils import get_core_windows_dirs
 
+# Setup logging
+logging.basicConfig(filename='SFS.log', level=logging.DEBUG, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
 class SimpleFileScanner:
     def __init__(self, root):
         self.root = root
         self.root.title("Simple File Scanner (SFS)")
-        self.root.geometry("600x650")
+        self.root.geometry("600x700")
         self.root.style = ttk.Style('darkly')
         self.root.resizable(False, False)  # Disable window resizing
 
@@ -31,6 +34,7 @@ class SimpleFileScanner:
         self.days_unused = StringVar()
         self.days_unused.set("30")  # Default value
         self.move_destination = StringVar()
+        self.found_files = []
 
         # Directory skip options
         self.skip_steam = BooleanVar(value=True)
@@ -100,6 +104,10 @@ class SimpleFileScanner:
         self.progress_bar = ttk.Progressbar(self.root, orient=HORIZONTAL, mode='determinate', length=500)
         self.progress_bar.pack(pady=10)
 
+        # Results label
+        self.results_label = ttk.Label(self.root, text="", style="info.TLabel")
+        self.results_label.pack(pady=10)
+
         # Watermark
         ttk.Label(self.root, text="Made With <3 By tfbt", style="secondary.TLabel", font=("Helvetica", 8)).place(relx=1.0, rely=1.0, anchor='se', x=-5, y=-5)
 
@@ -125,11 +133,14 @@ class SimpleFileScanner:
                 return
 
             unused_files = self.scan_for_unused_files(directory, days_unused)
+            self.found_files = unused_files
             self.write_to_file(unused_files)
 
             messagebox.showinfo("Scan Complete", f"Found {len(unused_files)} unused files. The list has been written to FoundFiles.txt")
+            self.results_label.config(text=f"Found {len(unused_files)} unused files.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+            logging.error("Error scanning files", exc_info=True)
 
     def scan_for_unused_files(self, directory, days_unused):
         skip_dirs = set()
@@ -180,21 +191,21 @@ class SimpleFileScanner:
 
     def move_files_to_destination(self):
         try:
-            with open("FoundFiles.txt", 'r') as f:
-                file_list = [line.strip() for line in f.readlines()]
-            move_files(file_list, self.move_destination.get())
-            messagebox.showinfo("Move Complete", f"Moved {len(file_list)} files to {self.move_destination.get()}")
+            move_files(self.found_files, self.move_destination.get())
+            messagebox.showinfo("Move Complete", f"Moved {len(self.found_files)} files to {self.move_destination.get()}")
+            self.results_label.config(text=f"Moved {len(self.found_files)} files.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+            logging.error("Error moving files", exc_info=True)
 
     def delete_files(self):
         try:
-            with open("FoundFiles.txt", 'r') as f:
-                file_list = [line.strip() for line in f.readlines()]
-            delete_files(file_list)
-            messagebox.showinfo("Deletion Complete", f"Deleted {len(file_list)} files")
+            delete_files(self.found_files)
+            messagebox.showinfo("Deletion Complete", f"Deleted {len(self.found_files)} files")
+            self.results_label.config(text=f"Deleted {len(self.found_files)} files.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+            logging.error("Error deleting files", exc_info=True)
 
     def open_latest_release(self):
         webbrowser.open("https://github.com/VVoiddd/Simple-File-Scanner")
@@ -218,6 +229,7 @@ class SimpleFileScanner:
                 sys.exit(0)
         except Exception as e:
             messagebox.showerror("Admin Access Error", str(e))
+            logging.error("Error requesting admin access", exc_info=True)
 
 def main():
     root = TkinterDnD.Tk()
