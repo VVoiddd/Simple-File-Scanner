@@ -1,15 +1,29 @@
-#MoveFiles.py
-
 import os
 import shutil
+import logging
 
-def move_files(file_list, destination):
-    if not os.path.exists(destination):
-        os.makedirs(destination)
+def move_files(file_list, destination_folder):
+    """
+    Move files from the provided list to the destination folder.
 
-    for file in file_list:
-        try:
-            shutil.move(file, destination)
-            print(f"Moved: {file}")
-        except Exception as e:
-            print(f"Failed to move {file}: {e}")
+    Parameters:
+    file_list (list): List of file paths to move.
+    destination_folder (str): The folder where files will be moved.
+    """
+    try:
+        if not os.path.exists(destination_folder):
+            os.makedirs(destination_folder)
+            logging.info(f"Created destination folder: {destination_folder}")
+
+        for file_path in file_list:
+            if os.path.isfile(file_path):
+                try:
+                    destination_path = os.path.join(destination_folder, os.path.basename(file_path))
+                    shutil.move(file_path, destination_path)
+                    logging.info(f"Moved file {file_path} to {destination_path}")
+                except Exception as e:
+                    logging.error(f"Failed to move file {file_path}", exc_info=True)
+            else:
+                logging.warning(f"File does not exist: {file_path}")
+    except Exception as e:
+        logging.error("An error occurred while moving files", exc_info=True)
