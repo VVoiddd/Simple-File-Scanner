@@ -21,8 +21,6 @@ class SimpleFileScanner:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("Simple File Scanner (SFS)")
-        self.root.geometry("600x650")
         self.root.style = ttk.Style('darkly')
         self.root.resizable(False, False)
 
@@ -43,12 +41,15 @@ class SimpleFileScanner:
         self.skip_ubisoft = BooleanVar(value=True)
         self.skip_other_games = BooleanVar(value=True)
 
-        # UI Elements
+        # Initialize UI
         self.create_widgets()
         self.check_for_updates()
 
     def create_widgets(self):
-        # Title
+        # Title with Version
+        self.root.title(f"Simple File Scanner (SFS) //||\\ Version: {self.get_current_version()}")
+
+        # Title Label
         ttk.Label(self.root, text="Simple File Scanner (SFS)", style="primary.TLabel", font=('Helvetica', 18, 'bold')).pack(pady=20)
 
         # Folder Selection
