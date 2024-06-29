@@ -1,6 +1,5 @@
 import os
 import time
-import sys
 import threading
 import webbrowser
 import ctypes
@@ -10,15 +9,13 @@ import shutil
 import tempfile
 import ttkbootstrap as ttk
 from tkinter import filedialog, StringVar, BooleanVar
-from ttkbootstrap.constants import *
 from tkinterdnd2 import TkinterDnD, DND_FILES
 import tkinter.messagebox as messagebox
 from MoveFiles import move_files
 from FileRemover import delete_files
-from shared_utils import get_core_windows_dirs
 
 class SimpleFileScanner:
-    # Define the URL to your version file and latest release ZIP
+    # Define URLs
     VERSION_URL = "https://raw.githubusercontent.com/VVoiddd/Simple-File-Scanner/main/version.txt"
     LATEST_RELEASE_URL = "https://github.com/VVoiddd/Simple-File-Scanner/archive/refs/heads/main.zip"
 
@@ -27,18 +24,18 @@ class SimpleFileScanner:
         self.root.title("Simple File Scanner (SFS)")
         self.root.geometry("600x650")
         self.root.style = ttk.Style('darkly')
-        self.root.resizable(False, False)  # Disable window resizing
+        self.root.resizable(False, False)
 
-        # Request administrative privileges
+        # Request admin access
         self.request_admin_access()
 
         # Variables
         self.folder_path = StringVar()
         self.days_unused = StringVar()
-        self.days_unused.set("30")  # Default value
+        self.days_unused.set("30")
         self.move_destination = StringVar()
 
-        # Directory skip options
+        # Skip options
         self.skip_steam = BooleanVar(value=True)
         self.skip_microsoft_store = BooleanVar(value=True)
         self.skip_xbox = BooleanVar(value=True)
@@ -48,7 +45,7 @@ class SimpleFileScanner:
 
         # UI Elements
         self.create_widgets()
-        self.check_for_updates()  # Check for updates when the app starts
+        self.check_for_updates()
 
     def create_widgets(self):
         # Title
@@ -56,11 +53,11 @@ class SimpleFileScanner:
 
         # Folder Selection
         folder_frame = ttk.Frame(self.root, padding=10)
-        folder_frame.pack(fill=X)
-        ttk.Label(folder_frame, text="Select Folder:", style="secondary.TLabel").pack(side=LEFT)
+        folder_frame.pack(fill='x')
+        ttk.Label(folder_frame, text="Select Folder:", style="secondary.TLabel").pack(side='left')
         folder_entry = ttk.Entry(folder_frame, textvariable=self.folder_path, width=40, state='readonly', style="info.TEntry")
-        folder_entry.pack(side=LEFT, padx=5)
-        ttk.Button(folder_frame, text="Browse", command=self.browse_folder, style="info.TButton").pack(side=LEFT)
+        folder_entry.pack(side='left', padx=5)
+        ttk.Button(folder_frame, text="Browse", command=self.browse_folder, style="info.TButton").pack(side='left')
 
         # Drag and Drop
         folder_entry.drop_target_register(DND_FILES)
@@ -68,21 +65,21 @@ class SimpleFileScanner:
 
         # Days Unused
         days_frame = ttk.Frame(self.root, padding=10)
-        days_frame.pack(fill=X)
-        ttk.Label(days_frame, text="Days Unused:", style="secondary.TLabel").pack(side=LEFT)
-        ttk.Entry(days_frame, textvariable=self.days_unused, width=5, style="info.TEntry").pack(side=LEFT, padx=5)
+        days_frame.pack(fill='x')
+        ttk.Label(days_frame, text="Days Unused:", style="secondary.TLabel").pack(side='left')
+        ttk.Entry(days_frame, textvariable=self.days_unused, width=5, style="info.TEntry").pack(side='left', padx=5)
 
         # Move Destination
         move_frame = ttk.Frame(self.root, padding=10)
-        move_frame.pack(fill=X)
-        ttk.Label(move_frame, text="Move Destination:", style="secondary.TLabel").pack(side=LEFT)
+        move_frame.pack(fill='x')
+        ttk.Label(move_frame, text="Move Destination:", style="secondary.TLabel").pack(side='left')
         move_entry = ttk.Entry(move_frame, textvariable=self.move_destination, width=40, state='readonly', style="info.TEntry")
-        move_entry.pack(side=LEFT, padx=5)
-        ttk.Button(move_frame, text="Browse", command=self.browse_move_folder, style="info.TButton").pack(side=LEFT)
+        move_entry.pack(side='left', padx=5)
+        ttk.Button(move_frame, text="Browse", command=self.browse_move_folder, style="info.TButton").pack(side='left')
 
         # Skip options
         skip_frame = ttk.Frame(self.root, padding=10)
-        skip_frame.pack(fill=X)
+        skip_frame.pack(fill='x')
         ttk.Label(skip_frame, text="Skip Directories:", style="secondary.TLabel").pack(anchor='w')
         ttk.Checkbutton(skip_frame, text="Steam", variable=self.skip_steam, style="info.TCheckbutton").pack(anchor='w')
         ttk.Checkbutton(skip_frame, text="Microsoft Store", variable=self.skip_microsoft_store, style="info.TCheckbutton").pack(anchor='w')
@@ -91,16 +88,12 @@ class SimpleFileScanner:
         ttk.Checkbutton(skip_frame, text="Ubisoft", variable=self.skip_ubisoft, style="info.TCheckbutton").pack(anchor='w')
         ttk.Checkbutton(skip_frame, text="Other Game Stores (Epic Games, Origin, etc.)", variable=self.skip_other_games, style="info.TCheckbutton").pack(anchor='w')
 
-        ttk.Label(self.root, text="* Having these checked means the scanner will skip these directories.", style="warning.TLabel").pack(pady=10)
+        ttk.Label(self.root, text="* Check to skip these directories.", style="warning.TLabel").pack(pady=10)
 
-        # Scan Button
+        # Buttons
         ttk.Button(self.root, text="Scan", command=self.scan_files_thread, style="success.TButton").pack(pady=10)
-
-        # Move and Delete Buttons
         ttk.Button(self.root, text="Move Files", command=self.move_files_to_destination_thread, style="success.TButton").pack(pady=5)
         ttk.Button(self.root, text="Delete Files", command=self.delete_files_thread, style="danger.TButton").pack(pady=5)
-
-        # Latest Release Button
         ttk.Button(self.root, text="Check Latest Release", command=self.open_latest_release, style="info.TButton").pack(pady=20)
 
     def browse_folder(self):
@@ -128,7 +121,6 @@ class SimpleFileScanner:
             messagebox.showerror("Error", "Please enter a valid number of days.")
             return
 
-        # Start scanning
         unused_files = self.get_unused_files(directory, days_unused)
         if unused_files:
             self.write_to_file(unused_files)
@@ -137,27 +129,13 @@ class SimpleFileScanner:
             messagebox.showinfo("Scan Complete", "No unused files found.")
 
     def get_unused_files(self, directory, days_unused):
-        skip_dirs = set()
-        if self.skip_steam.get():
-            skip_dirs.add('steam')
-        if self.skip_microsoft_store.get():
-            skip_dirs.add('microsoft store')
-        if self.skip_xbox.get():
-            skip_dirs.add('xbox')
-        if self.skip_discord.get():
-            skip_dirs.add('discord')
-        if self.skip_ubisoft.get():
-            skip_dirs.add('ubisoft')
-        if self.skip_other_games.get():
-            skip_dirs.update(['epic games', 'origin', 'gog galaxy', 'battle.net'])
-
+        skip_dirs = self.get_skip_directories()
         current_time = time.time()
         cutoff_time = current_time - (days_unused * 86400)
 
         unused_files = []
         for root, dirs, files in os.walk(directory):
-            for skip_dir in skip_dirs:
-                dirs[:] = [d for d in dirs if skip_dir.lower() not in d.lower()]
+            dirs[:] = [d for d in dirs if not any(skip_dir.lower() in d.lower() for skip_dir in skip_dirs)]
 
             for file in files:
                 file_path = os.path.join(root, file)
@@ -172,8 +150,7 @@ class SimpleFileScanner:
 
     def write_to_file(self, file_list):
         with open("FoundFiles.txt", "w") as f:
-            for file in file_list:
-                f.write(f"{file}\n")
+            f.write("\n".join(file_list))
 
     def move_files_to_destination(self):
         try:
@@ -212,12 +189,7 @@ class SimpleFileScanner:
             self.root.quit()
 
     def open_latest_release(self):
-        webbrowser.open("https://github.com/VVoiddd/Simple-File-Scanner/releases/latest")
-
-    def get_current_version(self):
-        # Read the local version from a file
-        with open("version.txt", "r") as f:
-            return f.read().strip()
+        webbrowser.open(self.LATEST_RELEASE_URL)
 
     def check_for_updates(self):
         try:
@@ -239,29 +211,21 @@ class SimpleFileScanner:
 
     def download_update(self, latest_version):
         try:
-            # Create a temporary directory to store the downloaded ZIP file
             temp_dir = tempfile.mkdtemp()
             zip_path = os.path.join(temp_dir, "latest_release.zip")
 
-            # Download the latest release ZIP file
             response = requests.get(self.LATEST_RELEASE_URL)
             with open(zip_path, "wb") as f:
                 f.write(response.content)
 
-            # Extract the ZIP file
             with zipfile.ZipFile(zip_path, "r") as zip_ref:
                 zip_ref.extractall(temp_dir)
 
-            # Find the extracted folder (assuming it matches the repository name)
             extracted_folder = os.path.join(temp_dir, "Simple-File-Scanner-main")
-
-            # Replace old files with the new ones
             self.apply_update(extracted_folder)
 
-            # Clean up the temporary directory
             shutil.rmtree(temp_dir)
 
-            # Update the local version file
             with open("version.txt", "w") as f:
                 f.write(latest_version)
 
@@ -275,20 +239,37 @@ class SimpleFileScanner:
             source = os.path.join(extracted_folder, item)
             destination = os.path.join(current_dir, item)
             if os.path.isdir(source):
-                # Remove old directory and replace with the new one
                 if os.path.exists(destination):
                     shutil.rmtree(destination)
                 shutil.move(source, destination)
             else:
-                # Replace old files with the new ones
                 if os.path.exists(destination):
                     os.remove(destination)
                 shutil.move(source, destination)
 
+    def get_current_version(self):
+        with open("version.txt", "r") as f:
+            return f.read().strip()
+
+    def get_skip_directories(self):
+        skip_dirs = []
+        if self.skip_steam.get():
+            skip_dirs.append('steam')
+        if self.skip_microsoft_store.get():
+            skip_dirs.append('microsoft store')
+        if self.skip_xbox.get():
+            skip_dirs.append('xbox')
+        if self.skip_discord.get():
+            skip_dirs.append('discord')
+        if self.skip_ubisoft.get():
+            skip_dirs.append('ubisoft')
+        if self.skip_other_games.get():
+            skip_dirs.extend(['epic games', 'origin', 'gog galaxy', 'battle.net'])
+        return skip_dirs
+
 def main():
     root = TkinterDnD.Tk()
     app = SimpleFileScanner(root)
-    app.check_for_updates()  # Check for updates when the app starts
     root.mainloop()
 
 if __name__ == "__main__":
