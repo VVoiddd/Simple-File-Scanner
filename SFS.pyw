@@ -47,7 +47,7 @@ class SimpleFileScanner:
 
     def create_widgets(self):
         # Title with Version
-        self.root.title(f"Simple File Scanner (SFS) //||\\ Version: {self.get_current_version()}")
+        self.root.title(f"Simple File Scanner (SFS) |-| Version: {self.get_current_version()}")
 
         # Title Label
         ttk.Label(self.root, text="Simple File Scanner (SFS)", style="primary.TLabel", font=('Helvetica', 18, 'bold')).pack(pady=20)
