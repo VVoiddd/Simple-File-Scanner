@@ -193,14 +193,12 @@ class SimpleFileScanner:
 
     def check_for_updates(self):
         try:
-            response = requests.get(self.VERSION_URL)
-            if response.status_code == 200:
-                latest_version = response.text.strip()
-                current_version = self.get_current_version()
+            current_version = self.get_current_version_local()
+            latest_version = self.get_current_version_github()
+
+            if current_version and latest_version:
                 if latest_version > current_version:
                     self.notify_update_available(latest_version)
-            else:
-                print("Failed to check for updates")
         except Exception as e:
             print(f"Error checking for updates: {e}")
 
@@ -247,9 +245,23 @@ class SimpleFileScanner:
                     os.remove(destination)
                 shutil.move(source, destination)
 
-    def get_current_version(self):
-        with open("version.txt", "r") as f:
-            return f.read().strip()
+    def get_current_version_local(self):
+        try:
+            with open("version.txt", "r") as f:
+                return f.read().strip()
+        except FileNotFoundError:
+            return None
+
+    def get_current_version_github(self):
+        try:
+            response = requests.get(self.VERSION_URL)
+            if response.status_code == 200:
+                return response.text.strip()
+            else:
+                return None
+        except Exception as e:
+            print(f"Error getting GitHub version: {e}")
+            return None
 
     def get_skip_directories(self):
         skip_dirs = []
