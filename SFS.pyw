@@ -95,7 +95,6 @@ class SimpleFileScanner:
         ttk.Button(self.root, text="Scan", command=self.scan_files_thread, style="success.TButton").pack(pady=10)
         ttk.Button(self.root, text="Move Files", command=self.move_files_to_destination_thread, style="success.TButton").pack(pady=5)
         ttk.Button(self.root, text="Delete Files", command=self.delete_files_thread, style="danger.TButton").pack(pady=5)
-        ttk.Button(self.root, text="Check Latest Release", command=self.open_latest_release, style="info.TButton").pack(pady=20)
 
     def browse_folder(self):
         folder_selected = filedialog.askdirectory()
@@ -188,9 +187,6 @@ class SimpleFileScanner:
         if not is_admin:
             messagebox.showwarning("Warning", "This application requires administrative privileges. Please run as administrator.")
             self.root.quit()
-
-    def open_latest_release(self):
-        webbrowser.open(self.LATEST_RELEASE_URL)
 
     def check_for_updates(self):
         try:
