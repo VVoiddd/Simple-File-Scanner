@@ -1,23 +1,17 @@
 import os
 import time
 import threading
-import webbrowser
 import ctypes
-import requests
-import zipfile
-import shutil
-import tempfile
 import ttkbootstrap as ttk
-from tkinter import filedialog, StringVar, BooleanVar
+from tkinter import filedialog, StringVar, BooleanVar, DoubleVar
 from tkinterdnd2 import TkinterDnD, DND_FILES
 import tkinter.messagebox as messagebox
 from MoveFiles import move_files
 from FileRemover import delete_files
 
 class SimpleFileScanner:
-    # Define URLs
-    VERSION_URL = "https://raw.githubusercontent.com/VVoiddd/Simple-File-Scanner/main/version.txt"
-    LATEST_RELEASE_URL = "https://github.com/VVoiddd/Simple-File-Scanner/archive/refs/heads/main.zip"
+    # GitHub URL for the project
+    GITHUB_URL = "https://github.com/VVoiddd/Simple-File-Scanner"
 
     def __init__(self, root):
         self.root = root
@@ -32,6 +26,7 @@ class SimpleFileScanner:
         self.days_unused = StringVar()
         self.days_unused.set("30")
         self.move_destination = StringVar()
+        self.progress = DoubleVar()
 
         # Skip options
         self.skip_steam = BooleanVar(value=True)
@@ -43,11 +38,10 @@ class SimpleFileScanner:
 
         # Initialize UI
         self.create_widgets()
-        self.check_for_updates()
 
     def create_widgets(self):
-        # Title with Version
-        self.root.title(f"Simple File Scanner (SFS) |-| Version: {self.get_current_version()}")
+        # Title with Version and GitHub link
+        self.root.title(f"Simple File Scanner (SFS) |-| Version: 1.0.2 |-| {self.GITHUB_URL}")
 
         # Title Label
         ttk.Label(self.root, text="Simple File Scanner (SFS)", style="primary.TLabel", font=('Helvetica', 18, 'bold')).pack(pady=20)
@@ -91,6 +85,10 @@ class SimpleFileScanner:
 
         ttk.Label(self.root, text="* Check to skip these directories.", style="warning.TLabel").pack(pady=10)
 
+        # Progress Bar
+        self.progress_bar = ttk.Progressbar(self.root, variable=self.progress, maximum=100, length=300)
+        self.progress_bar.pack(pady=10)
+
         # Buttons
         ttk.Button(self.root, text="Scan", command=self.scan_files_thread, style="success.TButton").pack(pady=10)
         ttk.Button(self.root, text="Move Files", command=self.move_files_to_destination_thread, style="success.TButton").pack(pady=5)
@@ -127,6 +125,7 @@ class SimpleFileScanner:
             messagebox.showinfo("Scan Complete", f"Scan complete. Found {len(unused_files)} unused files.")
         else:
             messagebox.showinfo("Scan Complete", "No unused files found.")
+        self.progress.set(0)  # Reset progress
 
     def get_unused_files(self, directory, days_unused):
         skip_dirs = self.get_skip_directories()
@@ -134,6 +133,9 @@ class SimpleFileScanner:
         cutoff_time = current_time - (days_unused * 86400)
 
         unused_files = []
+        total_files = sum([len(files) for r, d, files in os.walk(directory)])
+        scanned_files = 0
+
         for root, dirs, files in os.walk(directory):
             dirs[:] = [d for d in dirs if not any(skip_dir.lower() in d.lower() for skip_dir in skip_dirs)]
 
@@ -145,6 +147,11 @@ class SimpleFileScanner:
                         unused_files.append(file_path)
                 except Exception as e:
                     print(f"Error accessing file: {file_path}, {e}")
+
+                # Update progress
+                scanned_files += 1
+                self.progress.set((scanned_files / total_files) * 100)
+                self.root.update_idletasks()
 
         return unused_files
 
@@ -187,66 +194,6 @@ class SimpleFileScanner:
         if not is_admin:
             messagebox.showwarning("Warning", "This application requires administrative privileges. Please run as administrator.")
             self.root.quit()
-
-    def check_for_updates(self):
-        try:
-            response = requests.get(self.VERSION_URL)
-            if response.status_code == 200:
-                latest_version = response.text.strip()
-                current_version = self.get_current_version()
-                if latest_version > current_version:
-                    self.notify_update_available(latest_version)
-            else:
-                print("Failed to check for updates")
-        except Exception as e:
-            print(f"Error checking for updates: {e}")
-
-    def notify_update_available(self, latest_version):
-        result = messagebox.askyesno("Update Available", f"A new version ({latest_version}) is available. Do you want to download and install it?")
-        if result:
-            self.download_update(latest_version)
-
-    def download_update(self, latest_version):
-        try:
-            temp_dir = tempfile.mkdtemp()
-            zip_path = os.path.join(temp_dir, "latest_release.zip")
-
-            response = requests.get(self.LATEST_RELEASE_URL)
-            with open(zip_path, "wb") as f:
-                f.write(response.content)
-
-            with zipfile.ZipFile(zip_path, "r") as zip_ref:
-                zip_ref.extractall(temp_dir)
-
-            extracted_folder = os.path.join(temp_dir, "Simple-File-Scanner-main")
-            self.apply_update(extracted_folder)
-
-            shutil.rmtree(temp_dir)
-
-            with open("version.txt", "w") as f:
-                f.write(latest_version)
-
-            messagebox.showinfo("Update Complete", "The application has been updated to the latest version.")
-        except Exception as e:
-            messagebox.showerror("Update Failed", f"An error occurred while updating: {e}")
-
-    def apply_update(self, extracted_folder):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        for item in os.listdir(extracted_folder):
-            source = os.path.join(extracted_folder, item)
-            destination = os.path.join(current_dir, item)
-            if os.path.isdir(source):
-                if os.path.exists(destination):
-                    shutil.rmtree(destination)
-                shutil.move(source, destination)
-            else:
-                if os.path.exists(destination):
-                    os.remove(destination)
-                shutil.move(source, destination)
-
-    def get_current_version(self):
-        with open("version.txt", "r") as f:
-            return f.read().strip()
 
     def get_skip_directories(self):
         skip_dirs = []
