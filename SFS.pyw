@@ -170,9 +170,20 @@ class SimpleFileScanner:
 
     def delete_files(self):
         try:
-            delete_files("FoundFiles.txt")
+            # Open and read the FoundFiles.txt
+            with open("FoundFiles.txt", "r") as f:
+                file_paths = f.read().splitlines()
+
+            # Loop through each file path and try to delete
+            for file_path in file_paths:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    print(f"Deleted: {file_path}")
+                else:
+                    print(f"File does not exist: {file_path}")
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Error", f"An error occurred while deleting files: {e}")
+
 
     def scan_files_thread(self):
         thread = threading.Thread(target=self.scan_files)
