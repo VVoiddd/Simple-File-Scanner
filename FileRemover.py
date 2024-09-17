@@ -13,7 +13,7 @@ def delete_files(file_list):
 
     for file_path in file_list:
         # Skip files in core Windows directories
-        if any(file_path.startswith(core_dir) for core_dir in core_windows_dirs):
+        if any(os.path.commonpath([file_path, core_dir]) == core_dir for core_dir in core_windows_dirs):
             logging.warning(f"Skipped (core system file): {file_path}")
             continue
         
@@ -22,6 +22,10 @@ def delete_files(file_list):
                 os.remove(file_path)
                 logging.info(f"Deleted file: {file_path}")
             else:
-                logging.warning(f"File does not exist: {file_path}")
+                logging.warning(f"Not a file or does not exist: {file_path}")
+        except FileNotFoundError:
+            logging.warning(f"File not found during deletion attempt: {file_path}")
+        except PermissionError:
+            logging.error(f"Permission denied while trying to delete file: {file_path}")
         except Exception as e:
-            logging.error(f"Failed to delete file {file_path}", exc_info=True)
+            logging.error(f"Failed to delete file {file_path}. Error: {str(e)}", exc_info=True)

@@ -21,9 +21,12 @@ def move_files(file_list, destination_folder):
                     destination_path = os.path.join(destination_folder, os.path.basename(file_path))
                     shutil.move(file_path, destination_path)
                     logging.info(f"Moved file {file_path} to {destination_path}")
-                except Exception as e:
-                    logging.error(f"Failed to move file {file_path}", exc_info=True)
+                except shutil.Error as e:
+                    logging.error(f"Failed to move file {file_path}. {str(e)}")
+                except OSError as e:
+                    logging.error(f"OS error occurred while moving file {file_path}. {str(e)}")
             else:
-                logging.warning(f"File does not exist: {file_path}")
+                logging.warning(f"File does not exist or is not a file: {file_path}")
     except Exception as e:
-        logging.error("An error occurred while moving files", exc_info=True)
+        logging.error("An unexpected error occurred while moving files", exc_info=True)
+
