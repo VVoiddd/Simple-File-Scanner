@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import threading
 import ctypes
@@ -8,23 +9,28 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 import tkinter.messagebox as messagebox
 from MoveFiles import move_files
 from FileRemover import delete_files
+from concurrent.futures import ThreadPoolExecutor
 
 class SimpleFileScanner:
-    # GitHub URL for the project
     GITHUB_URL = "https://github.com/VVoiddd/Simple-File-Scanner"
 
     def __init__(self, root):
         self.root = root
         self.root.style = ttk.Style('darkly')
+        self.root.configure(background='#1a1a1a')  # Dark background
         self.root.resizable(False, False)
+        self.request_admin_access()  # Ensure admin access
 
-        # Request admin access
-        self.request_admin_access()
+        # Initialize Variables
+        self.init_variables()
 
-        # Variables
+        # Initialize UI
+        self.create_ui()
+
+    def init_variables(self):
+        """Initialize the variables used in the UI and functionality."""
         self.folder_path = StringVar()
-        self.days_unused = StringVar()
-        self.days_unused.set("30")
+        self.days_unused = StringVar(value="30")
         self.move_destination = StringVar()
         self.progress = DoubleVar()
 
@@ -36,78 +42,93 @@ class SimpleFileScanner:
         self.skip_ubisoft = BooleanVar(value=True)
         self.skip_other_games = BooleanVar(value=True)
 
-        # Initialize UI
-        self.create_widgets()
-
-    def create_widgets(self):
-        # Title with Version and GitHub link
+    def create_ui(self):
+        """Create the user interface components."""
         self.root.title(f"Simple File Scanner (SFS) |-| Version: 1.0.2 |-| {self.GITHUB_URL}")
 
-        # Title Label
-        ttk.Label(self.root, text="Simple File Scanner (SFS)", style="primary.TLabel", font=('Helvetica', 18, 'bold')).pack(pady=20)
+        ttk.Label(self.root, text="Simple File Scanner (SFS)", font=('Helvetica', 18, 'bold'), foreground='purple').pack(pady=20)
 
-        # Folder Selection
+        self.create_folder_selection()
+        self.create_days_input()
+        self.create_move_destination()
+        self.create_skip_options()
+        self.create_progress_bar()
+        self.create_buttons()
+
+    def create_folder_selection(self):
+        """Create folder selection UI."""
         folder_frame = ttk.Frame(self.root, padding=10)
         folder_frame.pack(fill='x')
-        ttk.Label(folder_frame, text="Select Folder:", style="secondary.TLabel").pack(side='left')
-        folder_entry = ttk.Entry(folder_frame, textvariable=self.folder_path, width=40, state='readonly', style="info.TEntry")
-        folder_entry.pack(side='left', padx=5)
-        ttk.Button(folder_frame, text="Browse", command=self.browse_folder, style="info.TButton").pack(side='left')
 
-        # Drag and Drop
+        ttk.Label(folder_frame, text="Select Folder:", foreground='purple').pack(side='left')
+        folder_entry = ttk.Entry(folder_frame, textvariable=self.folder_path, width=40, state='readonly')
+        folder_entry.pack(side='left', padx=5)
+
+        ttk.Button(folder_frame, text="Browse", command=self.browse_folder).pack(side='left')
         folder_entry.drop_target_register(DND_FILES)
         folder_entry.dnd_bind('<<Drop>>', self.drop_folder)
 
-        # Days Unused
+    def create_days_input(self):
+        """Create the input for specifying days unused."""
         days_frame = ttk.Frame(self.root, padding=10)
         days_frame.pack(fill='x')
-        ttk.Label(days_frame, text="Days Unused:", style="secondary.TLabel").pack(side='left')
-        ttk.Entry(days_frame, textvariable=self.days_unused, width=5, style="info.TEntry").pack(side='left', padx=5)
 
-        # Move Destination
+        ttk.Label(days_frame, text="Days Unused:", foreground='purple').pack(side='left')
+        ttk.Entry(days_frame, textvariable=self.days_unused, width=5).pack(side='left', padx=5)
+
+    def create_move_destination(self):
+        """Create the UI for move destination selection."""
         move_frame = ttk.Frame(self.root, padding=10)
         move_frame.pack(fill='x')
-        ttk.Label(move_frame, text="Move Destination:", style="secondary.TLabel").pack(side='left')
-        move_entry = ttk.Entry(move_frame, textvariable=self.move_destination, width=40, state='readonly', style="info.TEntry")
-        move_entry.pack(side='left', padx=5)
-        ttk.Button(move_frame, text="Browse", command=self.browse_move_folder, style="info.TButton").pack(side='left')
 
-        # Skip options
+        ttk.Label(move_frame, text="Move Destination:", foreground='purple').pack(side='left')
+        move_entry = ttk.Entry(move_frame, textvariable=self.move_destination, width=40, state='readonly')
+        move_entry.pack(side='left', padx=5)
+
+        ttk.Button(move_frame, text="Browse", command=self.browse_move_folder).pack(side='left')
+
+    def create_skip_options(self):
+        """Create checkboxes to allow skipping specific directories."""
         skip_frame = ttk.Frame(self.root, padding=10)
         skip_frame.pack(fill='x')
-        ttk.Label(skip_frame, text="Skip Directories:", style="secondary.TLabel").pack(anchor='w')
-        ttk.Checkbutton(skip_frame, text="Steam", variable=self.skip_steam, style="info.TCheckbutton").pack(anchor='w')
-        ttk.Checkbutton(skip_frame, text="Microsoft Store", variable=self.skip_microsoft_store, style="info.TCheckbutton").pack(anchor='w')
-        ttk.Checkbutton(skip_frame, text="Xbox", variable=self.skip_xbox, style="info.TCheckbutton").pack(anchor='w')
-        ttk.Checkbutton(skip_frame, text="Discord", variable=self.skip_discord, style="info.TCheckbutton").pack(anchor='w')
-        ttk.Checkbutton(skip_frame, text="Ubisoft", variable=self.skip_ubisoft, style="info.TCheckbutton").pack(anchor='w')
-        ttk.Checkbutton(skip_frame, text="Other Game Stores (Epic Games, Origin, etc.)", variable=self.skip_other_games, style="info.TCheckbutton").pack(anchor='w')
 
-        ttk.Label(self.root, text="* Check to skip these directories.", style="warning.TLabel").pack(pady=10)
+        ttk.Label(skip_frame, text="Skip Directories:", foreground='purple').pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Steam", variable=self.skip_steam).pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Microsoft Store", variable=self.skip_microsoft_store).pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Xbox", variable=self.skip_xbox).pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Discord", variable=self.skip_discord).pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Ubisoft", variable=self.skip_ubisoft).pack(anchor='w')
+        ttk.Checkbutton(skip_frame, text="Other Game Stores (Epic Games, Origin, etc.)", variable=self.skip_other_games).pack(anchor='w')
 
-        # Progress Bar
+    def create_progress_bar(self):
+        """Create the progress bar to show scan progress."""
         self.progress_bar = ttk.Progressbar(self.root, variable=self.progress, maximum=100, length=300)
         self.progress_bar.pack(pady=10)
 
-        # Buttons
-        ttk.Button(self.root, text="Scan", command=self.scan_files_thread, style="success.TButton").pack(pady=10)
-        ttk.Button(self.root, text="Move Files", command=self.move_files_to_destination_thread, style="success.TButton").pack(pady=5)
-        ttk.Button(self.root, text="Delete Files", command=self.delete_files_thread, style="danger.TButton").pack(pady=5)
+    def create_buttons(self):
+        """Create buttons for scan, move, and delete functionalities."""
+        ttk.Button(self.root, text="Scan", command=self.scan_files_thread).pack(pady=10)
+        ttk.Button(self.root, text="Move Files", command=self.move_files_thread).pack(pady=5)
+        ttk.Button(self.root, text="Delete Files", command=self.delete_files_thread).pack(pady=5)
 
     def browse_folder(self):
+        """Open folder dialog to select a folder."""
         folder_selected = filedialog.askdirectory()
         if folder_selected:
             self.folder_path.set(folder_selected)
 
     def drop_folder(self, event):
+        """Handle folder drag and drop."""
         self.folder_path.set(event.data)
 
     def browse_move_folder(self):
+        """Open folder dialog to select a destination folder."""
         folder_selected = filedialog.askdirectory()
         if folder_selected:
             self.move_destination.set(folder_selected)
 
     def scan_files(self):
+        """Scan files for unused files based on the specified criteria."""
         directory = self.folder_path.get()
         if not directory:
             messagebox.showerror("Error", "Please select a folder to scan.")
@@ -122,44 +143,49 @@ class SimpleFileScanner:
         unused_files = self.get_unused_files(directory, days_unused)
         if unused_files:
             self.write_to_file(unused_files)
-            messagebox.showinfo("Scan Complete", f"Scan complete. Found {len(unused_files)} unused files.")
+            messagebox.showinfo("Scan Complete", f"Found {len(unused_files)} unused files.")
         else:
             messagebox.showinfo("Scan Complete", "No unused files found.")
-        self.progress.set(0)  # Reset progress
+        self.progress.set(0)
 
     def get_unused_files(self, directory, days_unused):
+        """Get a list of files that haven't been accessed within the specified days."""
         skip_dirs = self.get_skip_directories()
         current_time = time.time()
         cutoff_time = current_time - (days_unused * 86400)
 
         unused_files = []
-        total_files = sum([len(files) for r, d, files in os.walk(directory)])
+        total_files = sum([len(files) for _, _, files in os.walk(directory)])
         scanned_files = 0
 
-        for root, dirs, files in os.walk(directory):
-            dirs[:] = [d for d in dirs if not any(skip_dir.lower() in d.lower() for skip_dir in skip_dirs)]
+        def scan_file(file, root):
+            file_path = os.path.join(root, file)
+            try:
+                if os.path.getatime(file_path) < cutoff_time:
+                    unused_files.append(file_path)
+            except Exception as e:
+                print(f"Error with file {file_path}: {e}")
 
-            for file in files:
-                file_path = os.path.join(root, file)
-                try:
-                    last_access_time = os.path.getatime(file_path)
-                    if last_access_time < cutoff_time:
-                        unused_files.append(file_path)
-                except Exception as e:
-                    print(f"Error accessing file: {file_path}, {e}")
+            nonlocal scanned_files
+            scanned_files += 1
+            self.progress.set((scanned_files / total_files) * 100)
+            self.root.update_idletasks()
 
-                # Update progress
-                scanned_files += 1
-                self.progress.set((scanned_files / total_files) * 100)
-                self.root.update_idletasks()
+        with ThreadPoolExecutor() as executor:
+            for root, dirs, files in os.walk(directory):
+                dirs[:] = [d for d in dirs if not any(skip.lower() in d.lower() for skip in skip_dirs)]
+                for file in files:
+                    executor.submit(scan_file, file, root)
 
         return unused_files
 
     def write_to_file(self, file_list):
-        with open("FoundFiles.txt", "w") as f:
+        """Write the list of found files to a file using UTF-8 encoding."""
+        with open("FoundFiles.txt", "w", encoding="utf-8") as f:
             f.write("\n".join(file_list))
 
-    def move_files_to_destination(self):
+    def move_files(self):
+        """Move files to the specified destination."""
         try:
             if not self.move_destination.get():
                 messagebox.showerror("Error", "Please select a move destination folder.")
@@ -169,44 +195,43 @@ class SimpleFileScanner:
             messagebox.showerror("Error", str(e))
 
     def delete_files(self):
+        """Delete files listed in the FoundFiles.txt."""
         try:
-            # Open and read the FoundFiles.txt
-            with open("FoundFiles.txt", "r") as f:
-                file_paths = f.read().splitlines()
+            with open("FoundFiles.txt", "r", encoding="utf-8") as f:
+                files = f.read().splitlines()
 
-            # Loop through each file path and try to delete
-            for file_path in file_paths:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                    print(f"Deleted: {file_path}")
+            for file in files:
+                if os.path.exists(file):
+                    os.remove(file)
                 else:
-                    print(f"File does not exist: {file_path}")
+                    print(f"File does not exist: {file}")
         except Exception as e:
-            messagebox.showerror("Error", f"An error occurred while deleting files: {e}")
-
+            messagebox.showerror("Error", f"Failed to delete files: {e}")
 
     def scan_files_thread(self):
-        thread = threading.Thread(target=self.scan_files)
-        thread.start()
+        """Start file scan in a separate thread."""
+        threading.Thread(target=self.scan_files).start()
 
-    def move_files_to_destination_thread(self):
-        thread = threading.Thread(target=self.move_files_to_destination)
-        thread.start()
+    def move_files_thread(self):
+        """Start file move in a separate thread."""
+        threading.Thread(target=self.move_files).start()
 
     def delete_files_thread(self):
-        thread = threading.Thread(target=self.delete_files)
-        thread.start()
+        """Start file deletion in a separate thread."""
+        threading.Thread(target=self.delete_files).start()
 
     def request_admin_access(self):
+        """Request administrative privileges if not already running with them."""
         try:
-            is_admin = os.getuid() == 0
+            is_admin = os.getuid() == 0  # For Unix-like systems
         except AttributeError:
-            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0  # For Windows
         if not is_admin:
-            messagebox.showwarning("Warning", "This application requires administrative privileges. Please run as administrator.")
-            self.root.quit()
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+            sys.exit()
 
     def get_skip_directories(self):
+        """Get the list of directories to skip based on user selection."""
         skip_dirs = []
         if self.skip_steam.get():
             skip_dirs.append('steam')
@@ -222,10 +247,13 @@ class SimpleFileScanner:
             skip_dirs.extend(['epic games', 'origin', 'gog galaxy', 'battle.net'])
         return skip_dirs
 
+
 def main():
+    """Main entry point for the application."""
     root = TkinterDnD.Tk()
     app = SimpleFileScanner(root)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
