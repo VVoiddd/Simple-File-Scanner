@@ -44,7 +44,7 @@ class SimpleFileScanner:
 
     def create_ui(self):
         """Create the user interface components."""
-        self.root.title(f"Simple File Scanner (SFS) |-| Version: 1.0.2 |-| {self.GITHUB_URL}")
+        self.root.title(f"Simple File Scanner (SFS) |-| Version: 1.0.3")
 
         ttk.Label(self.root, text="Simple File Scanner (SFS)", font=('Helvetica', 18, 'bold'), foreground='purple').pack(pady=20)
 
@@ -106,7 +106,7 @@ class SimpleFileScanner:
         self.progress_bar.pack(pady=10)
 
     def create_buttons(self):
-        """Create buttons for scan, move, and delete functionalities."""
+        """Create buttons for scan, move, and delete functionalities."""        
         ttk.Button(self.root, text="Scan", command=self.scan_files_thread).pack(pady=10)
         ttk.Button(self.root, text="Move Files", command=self.move_files_thread).pack(pady=5)
         ttk.Button(self.root, text="Delete Files", command=self.delete_files_thread).pack(pady=5)
@@ -185,7 +185,7 @@ class SimpleFileScanner:
             f.write("\n".join(file_list))
 
     def move_files(self):
-        """Move files to the specified destination."""
+        """Move files to the specified destination."""        
         try:
             if not self.move_destination.get():
                 messagebox.showerror("Error", "Please select a move destination folder.")
@@ -195,7 +195,7 @@ class SimpleFileScanner:
             messagebox.showerror("Error", str(e))
 
     def delete_files(self):
-        """Delete files listed in the FoundFiles.txt."""
+        """Delete files listed in the FoundFiles.txt."""        
         try:
             with open("FoundFiles.txt", "r", encoding="utf-8") as f:
                 files = f.read().splitlines()
@@ -223,37 +223,34 @@ class SimpleFileScanner:
     def request_admin_access(self):
         """Request administrative privileges if not already running with them."""
         try:
-            is_admin = os.getuid() == 0  # For Unix-like systems
+            is_admin = os.getuid() == 0  # Check if the current user is root (Linux/Mac)
         except AttributeError:
-            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0  # For Windows
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin()  # Check for Windows
+
         if not is_admin:
-            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-            sys.exit()
+            if messagebox.askyesno("Admin Access Required", "This application requires administrative access. Would you like to restart it with admin privileges?"):
+                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None)
+                sys.exit()
 
     def get_skip_directories(self):
-        """Get the list of directories to skip based on user selection."""
+        """Get the directories to skip based on user selections."""
         skip_dirs = []
         if self.skip_steam.get():
-            skip_dirs.append('steam')
+            skip_dirs.append("Steam")
         if self.skip_microsoft_store.get():
-            skip_dirs.append('microsoft store')
+            skip_dirs.append("Microsoft Store")
         if self.skip_xbox.get():
-            skip_dirs.append('xbox')
+            skip_dirs.append("Xbox")
         if self.skip_discord.get():
-            skip_dirs.append('discord')
+            skip_dirs.append("Discord")
         if self.skip_ubisoft.get():
-            skip_dirs.append('ubisoft')
+            skip_dirs.append("Ubisoft")
         if self.skip_other_games.get():
-            skip_dirs.extend(['epic games', 'origin', 'gog galaxy', 'battle.net'])
+            skip_dirs.append("Other Game Stores")
+
         return skip_dirs
 
-
-def main():
-    """Main entry point for the application."""
+if __name__ == "__main__":
     root = TkinterDnD.Tk()
     app = SimpleFileScanner(root)
     root.mainloop()
-
-
-if __name__ == "__main__":
-    main()
